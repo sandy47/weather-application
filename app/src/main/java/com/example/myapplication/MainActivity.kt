@@ -44,8 +44,7 @@ class MainActivity : ComponentActivity() {
                 if (isGranted) {
                     getLastLocation() // Get location if permission is granted
                 } else {
-                    // Handle the case where the user denied the permission
-                    // Maybe show a message or take appropriate action
+                    error(R.string.error_message)
                 }
             }
 
