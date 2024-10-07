@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -28,8 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberImagePainter
 
 class MainActivity : ComponentActivity() {
-    private val apiKey =
-        "e31f9dcd519259af40e017cab72bfb7a" // Replace with your OpenWeatherMap API Key
+    private val apiKey = "e31f9dcd519259af40e017cab72bfb7a"
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
@@ -102,6 +102,12 @@ fun WeatherApp(viewModel: WeatherViewModel, preferencesManager: PreferencesManag
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .clickable { keyboardController?.hide() } // Hide keyboard on click outside
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -115,19 +121,29 @@ fun WeatherApp(viewModel: WeatherViewModel, preferencesManager: PreferencesManag
             label = { Text(stringResource(id = R.string.enter_city)) },
             keyboardActions = KeyboardActions(
                 onDone = {
-                    keyboardController?.hide()
+                    if (city.isNotEmpty()) {
+                        viewModel.fetchWeather(city) // Fetch weather for the entered city
+                        preferencesManager.saveLastSearchedCity(city) // Save the last searched city
+                        keyboardController?.hide() // Hide the keyboard when the button is clicked
+                    } else {
+                        viewModel.error = "Please enter a city name." // Handle empty input
+                    }
                 }
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done
-            )
+            ),
+            singleLine = true,
+            maxLines = 1
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
+            keyboardController?.hide()
             if (city.isNotEmpty()) {
                 viewModel.fetchWeather(city)
                 preferencesManager.saveLastSearchedCity(city) // Save the last searched city
+                keyboardController?.hide()
             } else {
                 viewModel.error = "Please enter a city name."
             }
